@@ -7,7 +7,7 @@ defmodule ScenicTimer.Scene.Home do
   def init(_args, _opts) do
     graph =
       Graph.build()
-      |> Countdown.add_to_graph(5)
+      |> Countdown.add_to_graph(5, name: Countdown)
 
     {:ok, graph, push: graph}
   end
