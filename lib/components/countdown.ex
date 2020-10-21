@@ -35,6 +35,7 @@ defmodule ScenicTimer.Countdown do
 
   def start, do: GenServer.cast(__MODULE__, :start)
   def stop, do: GenServer.cast(__MODULE__, :stop)
+  def reset, do: GenServer.cast(__MODULE__, :reset)
   def tick, do: GenServer.cast(__MODULE__, :tick)
 
   def handle_cast(:start, state) do
@@ -45,13 +46,19 @@ defmodule ScenicTimer.Countdown do
     {:noreply, %{state | running: false}}
   end
 
+  def handle_cast(:reset, state) do
+    graph = update_remaining(state.graph, state.initial_ms, state.initial_ms) 
+
+    {:noreply, %{state | graph: graph, ms_remaining: state.initial_ms, running: false},
+     push: graph}
+  end
+
   def handle_cast(:tick, %{running: true} = state) do
     ms_remaining = state.ms_remaining - 100
 
     graph =
       state.graph
-      |> Graph.modify(:text, &text(&1, (ms_remaining / 1000) |> ceil() |> to_string()))
-      |> Graph.modify(:arc, &arc(&1, remaining_arc(ms_remaining, state.initial_ms)))
+      |> update_remaining(ms_remaining, state.initial_ms)
       |> turn_red_if_finished(ms_remaining)
 
     running = ms_remaining > 0
@@ -63,6 +70,12 @@ defmodule ScenicTimer.Countdown do
 
   defp remaining_arc(ms_remaining, initial_ms) do
     {100, 0, :math.pi() * 2 * ms_remaining / initial_ms}
+  end
+
+  defp update_remaining(graph, ms_remaining, initial_ms) do
+    graph
+    |> Graph.modify(:text, &text(&1, (ms_remaining / 1000) |> ceil() |> to_string()))
+    |> Graph.modify(:arc, &arc(&1, remaining_arc(ms_remaining, initial_ms)))
   end
 
   defp turn_red_if_finished(graph, ms_remaining) when ms_remaining == 0 do
