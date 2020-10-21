@@ -1,6 +1,8 @@
 defmodule ScenicTimer.Countdown do
   use Scenic.Component
+
   import Scenic.Primitives, only: [arc: 2, arc: 3, circle: 3, text: 2, text: 3, update_opts: 2]
+
   alias Scenic.Graph
 
   @graph Graph.build()
@@ -19,16 +21,23 @@ defmodule ScenicTimer.Countdown do
 
   def init(initial_seconds, _opts) do
     initial_ms = initial_seconds * 1000
-    graph = Graph.modify(@graph, :text, &text(&1, to_string(initial_ms)))
+    graph = Graph.modify(@graph, :text, &text(&1, to_string(initial_seconds)))
 
     state = %{
       graph: graph,
       initial_ms: initial_ms,
       ms_remaining: initial_ms,
-      running: true
+      running: false
     }
 
     {:ok, state, push: graph}
+  end
+
+  def start, do: GenServer.cast(__MODULE__, :start)
+  def tick, do: GenServer.cast(__MODULE__, :tick)
+
+  def handle_cast(:start, state) do
+    {:noreply, %{state | running: true}}
   end
 
   def handle_cast(:tick, %{running: true} = state) do
