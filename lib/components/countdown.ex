@@ -36,10 +36,7 @@ defmodule ScenicTimer.Countdown do
     graph =
       state.graph
       |> Graph.modify(:text, &text(&1, seconds_remaining |> round() |> to_string()))
-      |> Graph.modify(
-        :arc,
-        &arc(&1, {100, 0, :math.pi() * 2 * seconds_remaining / state.initial_seconds})
-      )
+      |> Graph.modify(:arc, &arc(&1, remaining_arc(seconds_remaining, state.initial_seconds)))
 
     # Avoid overrun from floating point inaccuracy
     running = seconds_remaining > 0.01
@@ -48,4 +45,8 @@ defmodule ScenicTimer.Countdown do
   end
 
   def handle_cast(:tick, state), do: {:noreply, state}
+
+  defp remaining_arc(seconds_remaining, initial_seconds) do
+    {100, 0, :math.pi() * 2 * seconds_remaining / initial_seconds}
+  end
 end
