@@ -1,15 +1,15 @@
 defmodule ScenicTimer.Countdown do
   use Scenic.Component
-  import Scenic.Primitives, only: [arc: 2, arc: 3, circle: 3, text: 2, text: 3]
+  import Scenic.Primitives, only: [arc: 2, arc: 3, circle: 3, text: 2, text: 3, update_opts: 2]
   alias Scenic.Graph
 
   @graph Graph.build()
+         |> circle(100, id: :circle, stroke: {2, :grey})
          |> text("",
            id: :text,
            font_size: 100,
            text_align: :center_middle
          )
-         |> circle(100, stroke: {2, :grey})
          |> arc({100, 0, :math.pi() * 2}, id: :arc, stroke: {5, :white}, rotate: :math.pi() / -2)
 
   def info(data), do: "Data must be an integer, but got #{inspect(data)}"
@@ -37,6 +37,7 @@ defmodule ScenicTimer.Countdown do
       state.graph
       |> Graph.modify(:text, &text(&1, seconds_remaining |> round() |> to_string()))
       |> Graph.modify(:arc, &arc(&1, remaining_arc(seconds_remaining, state.initial_seconds)))
+      |> turn_red_if_finished(seconds_remaining)
 
     # Avoid overrun from floating point inaccuracy
     running = seconds_remaining > 0.01
@@ -49,4 +50,10 @@ defmodule ScenicTimer.Countdown do
   defp remaining_arc(seconds_remaining, initial_seconds) do
     {100, 0, :math.pi() * 2 * seconds_remaining / initial_seconds}
   end
+
+  defp turn_red_if_finished(graph, seconds_remaining) when seconds_remaining < 0.01 do
+    Graph.modify(graph, :circle, &update_opts(&1, fill: :red))
+  end
+
+  defp turn_red_if_finished(graph, _seconds_remaining), do: graph
 end
