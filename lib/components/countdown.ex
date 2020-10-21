@@ -47,14 +47,14 @@ defmodule ScenicTimer.Countdown do
   end
 
   def handle_cast(:reset, state) do
-    graph = update_remaining(state.graph, state.initial_ms, state.initial_ms) 
+    graph = update_remaining(state.graph, state.initial_ms, state.initial_ms)
 
     {:noreply, %{state | graph: graph, ms_remaining: state.initial_ms, running: false},
      push: graph}
   end
 
   def handle_cast(:tick, %{running: true} = state) do
-    ms_remaining = state.ms_remaining - 100
+    ms_remaining = state.ms_remaining - 10
 
     graph =
       state.graph

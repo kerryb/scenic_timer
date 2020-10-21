@@ -9,13 +9,13 @@ defmodule ScenicTimer.Clock do
 
   @impl GenServer
   def init(_args) do
-    Process.send_after(self(), :tick, 100)
+    Process.send_after(self(), :tick, 10)
     {:ok, %{}}
   end
 
   @impl GenServer
   def handle_info(:tick, state) do
-    Process.send_after(self(), :tick, 100)
+    Process.send_after(self(), :tick, 10)
     Countdown.tick()
     {:noreply, state}
   end
