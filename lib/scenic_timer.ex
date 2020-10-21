@@ -3,7 +3,7 @@ defmodule ScenicTimer do
   Starter application using the Scenic framework.
   """
 
-  alias ScenicTimer.Clock
+  alias ScenicTimer.{Clock, Timer}
 
   def start(_type, _args) do
     # load the viewport configuration from config
@@ -12,6 +12,7 @@ defmodule ScenicTimer do
     # start the application with the viewport
     children = [
       {Scenic, viewports: [main_viewport_config]},
+      {Timer, [Application.get_env(:scenic_timer, :initial_seconds)]},
       {Clock, []}
     ]
 

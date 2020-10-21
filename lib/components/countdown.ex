@@ -3,7 +3,7 @@ defmodule ScenicTimer.Countdown do
 
   import Scenic.Primitives, only: [arc: 2, arc: 3, circle: 3, text: 2, text: 3, update_opts: 2]
 
-  alias Scenic.Graph
+  alias Scenic.{Component, Graph, Scene}
 
   @graph Graph.build()
          |> circle(100, id: :circle, stroke: {2, :grey})
@@ -14,59 +14,32 @@ defmodule ScenicTimer.Countdown do
          )
          |> arc({100, 0, :math.pi() * 2}, id: :arc, stroke: {5, :white}, rotate: :math.pi() / -2)
 
+  @impl Component
   def info(data), do: "Data must be an integer, but got #{inspect(data)}"
 
-  def verify(initial_seconds) when is_integer(initial_seconds), do: {:ok, initial_seconds}
+  @impl Component
+  def verify(data) when is_integer(data), do: {:ok, data}
   def verify(_), do: :invalid_data
 
+  @impl Scene
   def init(initial_seconds, _opts) do
-    initial_ms = initial_seconds * 1000
     graph = Graph.modify(@graph, :text, &text(&1, to_string(initial_seconds)))
-
-    state = %{
-      graph: graph,
-      initial_ms: initial_ms,
-      ms_remaining: initial_ms,
-      running: false
-    }
-
-    {:ok, state, push: graph}
+    {:ok, graph, push: graph}
   end
 
-  def start, do: GenServer.cast(__MODULE__, :start)
-  def stop, do: GenServer.cast(__MODULE__, :stop)
-  def reset, do: GenServer.cast(__MODULE__, :reset)
-  def tick, do: GenServer.cast(__MODULE__, :tick)
-
-  def handle_cast(:start, state) do
-    {:noreply, %{state | running: true}}
+  def update(ms_remaining, initial_ms) do
+    GenServer.cast(__MODULE__, {:update, ms_remaining, initial_ms})
   end
 
-  def handle_cast(:stop, state) do
-    {:noreply, %{state | running: false}}
-  end
-
-  def handle_cast(:reset, state) do
-    graph = update_remaining(state.graph, state.initial_ms, state.initial_ms)
-
-    {:noreply, %{state | graph: graph, ms_remaining: state.initial_ms, running: false},
-     push: graph}
-  end
-
-  def handle_cast(:tick, %{running: true} = state) do
-    ms_remaining = state.ms_remaining - 10
-
+  @impl Scene
+  def handle_cast({:update, ms_remaining, initial_ms}, graph) do
     graph =
-      state.graph
-      |> update_remaining(ms_remaining, state.initial_ms)
+      graph
+      |> update_remaining(ms_remaining, initial_ms)
       |> turn_red_if_finished(ms_remaining)
 
-    running = ms_remaining > 0
-    state = %{state | ms_remaining: ms_remaining, graph: graph, running: running}
-    {:noreply, state, push: graph}
+    {:noreply, graph, push: graph}
   end
-
-  def handle_cast(:tick, state), do: {:noreply, state}
 
   defp remaining_arc(ms_remaining, initial_ms) do
     {100, 0, :math.pi() * 2 * ms_remaining / initial_ms}
@@ -82,5 +55,7 @@ defmodule ScenicTimer.Countdown do
     Graph.modify(graph, :circle, &update_opts(&1, fill: :red))
   end
 
-  defp turn_red_if_finished(graph, _ms_remaining), do: graph
+  defp turn_red_if_finished(graph, _ms_remaining) do
+    Graph.modify(graph, :circle, &update_opts(&1, fill: :clear))
+  end
 end

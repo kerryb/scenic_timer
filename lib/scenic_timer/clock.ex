@@ -1,7 +1,7 @@
 defmodule ScenicTimer.Clock do
   use GenServer
 
-  alias ScenicTimer.Countdown
+  alias ScenicTimer.Timer
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
@@ -16,7 +16,7 @@ defmodule ScenicTimer.Clock do
   @impl GenServer
   def handle_info(:tick, state) do
     Process.send_after(self(), :tick, 10)
-    Countdown.tick()
+    Timer.tick()
     {:noreply, state}
   end
 end

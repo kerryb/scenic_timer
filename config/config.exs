@@ -2,11 +2,13 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+config :scenic_timer, initial_seconds: 5
+
 # Configure the main viewport for the Scenic application
 config :scenic_timer, :viewport, %{
   name: :main_viewport,
   size: {700, 600},
-  default_scene: {ScenicTimer.Scene.Home, nil},
+  default_scene: {ScenicTimer.Scene.Home, [5]},
   drivers: [
     %{
       module: Scenic.Driver.Glfw,
