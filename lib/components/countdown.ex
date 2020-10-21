@@ -1,7 +1,7 @@
 defmodule ScenicTimer.Countdown do
   use Scenic.Component
-  import Scenic.Primitives, only: [text: 2, text: 3, update_opts: 2]
-  alias Scenic.{Graph, ViewPort}
+  import Scenic.Primitives, only: [text: 2, text: 3]
+  alias Scenic.Graph
 
   @graph Graph.build()
          |> text("",
@@ -15,16 +15,14 @@ defmodule ScenicTimer.Countdown do
   def verify(initial_seconds) when is_integer(initial_seconds), do: {:ok, initial_seconds}
   def verify(_), do: :invalid_data
 
-  def init(initial_seconds, opts) do
-    {:ok, %ViewPort.Status{size: {width, height}}} = ViewPort.info(opts[:viewport])
-
+  def init(initial_seconds, _opts) do
     graph =
       @graph
       |> Graph.modify(:text, &text(&1, to_string(initial_seconds)))
-      |> Graph.modify(:text, &update_opts(&1, translate: {width / 2, height / 2}))
 
     state = %{
       graph: graph,
+      initial_seconds: initial_seconds,
       seconds_remaining: initial_seconds,
       running: true
     }
@@ -39,5 +37,6 @@ defmodule ScenicTimer.Countdown do
     state = %{state | seconds_remaining: seconds_remaining, graph: graph, running: running}
     {:noreply, state, push: graph}
   end
+
   def handle_cast(:tick, state), do: {:noreply, state}
 end
