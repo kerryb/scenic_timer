@@ -18,12 +18,13 @@ defmodule ScenicTimer.Countdown do
   def verify(_), do: :invalid_data
 
   def init(initial_seconds, _opts) do
-    graph = Graph.modify(@graph, :text, &text(&1, to_string(initial_seconds)))
+    initial_ms = initial_seconds * 1000
+    graph = Graph.modify(@graph, :text, &text(&1, to_string(initial_ms)))
 
     state = %{
       graph: graph,
-      initial_seconds: initial_seconds,
-      seconds_remaining: initial_seconds,
+      initial_ms: initial_ms,
+      ms_remaining: initial_ms,
       running: true
     }
 
@@ -31,29 +32,28 @@ defmodule ScenicTimer.Countdown do
   end
 
   def handle_cast(:tick, %{running: true} = state) do
-    seconds_remaining = state.seconds_remaining - 0.1
+    ms_remaining = state.ms_remaining - 100
 
     graph =
       state.graph
-      |> Graph.modify(:text, &text(&1, seconds_remaining |> round() |> to_string()))
-      |> Graph.modify(:arc, &arc(&1, remaining_arc(seconds_remaining, state.initial_seconds)))
-      |> turn_red_if_finished(seconds_remaining)
+      |> Graph.modify(:text, &text(&1, (ms_remaining / 1000) |> round() |> to_string()))
+      |> Graph.modify(:arc, &arc(&1, remaining_arc(ms_remaining, state.initial_ms)))
+      |> turn_red_if_finished(ms_remaining)
 
-    # Avoid overrun from floating point inaccuracy
-    running = seconds_remaining > 0.01
-    state = %{state | seconds_remaining: seconds_remaining, graph: graph, running: running}
+    running = ms_remaining > 0
+    state = %{state | ms_remaining: ms_remaining, graph: graph, running: running}
     {:noreply, state, push: graph}
   end
 
   def handle_cast(:tick, state), do: {:noreply, state}
 
-  defp remaining_arc(seconds_remaining, initial_seconds) do
-    {100, 0, :math.pi() * 2 * seconds_remaining / initial_seconds}
+  defp remaining_arc(ms_remaining, initial_ms) do
+    {100, 0, :math.pi() * 2 * ms_remaining / initial_ms}
   end
 
-  defp turn_red_if_finished(graph, seconds_remaining) when seconds_remaining < 0.01 do
+  defp turn_red_if_finished(graph, ms_remaining) when ms_remaining == 0 do
     Graph.modify(graph, :circle, &update_opts(&1, fill: :red))
   end
 
-  defp turn_red_if_finished(graph, _seconds_remaining), do: graph
+  defp turn_red_if_finished(graph, _ms_remaining), do: graph
 end
