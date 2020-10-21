@@ -34,10 +34,15 @@ defmodule ScenicTimer.Countdown do
   end
 
   def start, do: GenServer.cast(__MODULE__, :start)
+  def stop, do: GenServer.cast(__MODULE__, :stop)
   def tick, do: GenServer.cast(__MODULE__, :tick)
 
   def handle_cast(:start, state) do
     {:noreply, %{state | running: true}}
+  end
+
+  def handle_cast(:stop, state) do
+    {:noreply, %{state | running: false}}
   end
 
   def handle_cast(:tick, %{running: true} = state) do
