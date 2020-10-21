@@ -16,9 +16,7 @@ defmodule ScenicTimer.Countdown do
   def verify(_), do: :invalid_data
 
   def init(initial_seconds, _opts) do
-    graph =
-      @graph
-      |> Graph.modify(:text, &text(&1, to_string(initial_seconds)))
+    graph = Graph.modify(@graph , :text, &text(&1, to_string(initial_seconds)))
 
     state = %{
       graph: graph,
@@ -32,7 +30,7 @@ defmodule ScenicTimer.Countdown do
 
   def handle_cast(:tick, %{running: true} = state) do
     seconds_remaining = state.seconds_remaining - 1
-    graph = state.graph |> Graph.modify(:text, &text(&1, to_string(seconds_remaining)))
+    graph = Graph.modify(state.graph, :text, &text(&1, to_string(seconds_remaining)))
     running = seconds_remaining > 0
     state = %{state | seconds_remaining: seconds_remaining, graph: graph, running: running}
     {:noreply, state, push: graph}
