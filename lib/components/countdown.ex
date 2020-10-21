@@ -1,6 +1,6 @@
 defmodule ScenicTimer.Countdown do
   use Scenic.Component
-  import Scenic.Primitives, only: [text: 2, text: 3]
+  import Scenic.Primitives, only: [arc: 2, arc: 3, circle: 3, text: 2, text: 3]
   alias Scenic.Graph
 
   @graph Graph.build()
@@ -9,6 +9,8 @@ defmodule ScenicTimer.Countdown do
            font_size: 100,
            text_align: :center_middle
          )
+         |> circle(100, stroke: {2, :grey})
+         |> arc({100, 0, :math.pi() * 2}, id: :arc, stroke: {5, :white}, rotate: :math.pi() / -2)
 
   def info(data), do: "Data must be an integer, but got #{inspect(data)}"
 
@@ -16,7 +18,7 @@ defmodule ScenicTimer.Countdown do
   def verify(_), do: :invalid_data
 
   def init(initial_seconds, _opts) do
-    graph = Graph.modify(@graph , :text, &text(&1, to_string(initial_seconds)))
+    graph = Graph.modify(@graph, :text, &text(&1, to_string(initial_seconds)))
 
     state = %{
       graph: graph,
@@ -30,7 +32,12 @@ defmodule ScenicTimer.Countdown do
 
   def handle_cast(:tick, %{running: true} = state) do
     seconds_remaining = state.seconds_remaining - 1
-    graph = Graph.modify(state.graph, :text, &text(&1, to_string(seconds_remaining)))
+
+    graph =
+      state.graph
+      |> Graph.modify(:text, &text(&1, to_string(seconds_remaining)))
+      |> Graph.modify( :arc, &arc(&1, {100, 0, :math.pi() * 2 * seconds_remaining / state.initial_seconds}))
+
     running = seconds_remaining > 0
     state = %{state | seconds_remaining: seconds_remaining, graph: graph, running: running}
     {:noreply, state, push: graph}
