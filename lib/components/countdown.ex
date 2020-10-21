@@ -25,16 +25,19 @@ defmodule ScenicTimer.Countdown do
 
     state = %{
       graph: graph,
-      seconds_remaining: initial_seconds
+      seconds_remaining: initial_seconds,
+      running: true
     }
 
     {:ok, state, push: graph}
   end
 
-  def handle_cast(:tick, state) do
+  def handle_cast(:tick, %{running: true} = state) do
     seconds_remaining = state.seconds_remaining - 1
     graph = state.graph |> Graph.modify(:text, &text(&1, to_string(seconds_remaining)))
-    state = %{state | seconds_remaining: seconds_remaining, graph: graph}
+    running = seconds_remaining > 0
+    state = %{state | seconds_remaining: seconds_remaining, graph: graph, running: running}
     {:noreply, state, push: graph}
   end
+  def handle_cast(:tick, state), do: {:noreply, state}
 end
