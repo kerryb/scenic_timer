@@ -36,7 +36,7 @@ defmodule ScenicTimer.Countdown do
 
     graph =
       state.graph
-      |> Graph.modify(:text, &text(&1, (ms_remaining / 1000) |> round() |> to_string()))
+      |> Graph.modify(:text, &text(&1, (ms_remaining / 1000) |> ceil() |> to_string()))
       |> Graph.modify(:arc, &arc(&1, remaining_arc(ms_remaining, state.initial_ms)))
       |> turn_red_if_finished(ms_remaining)
 
